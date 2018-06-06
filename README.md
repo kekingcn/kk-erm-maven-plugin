@@ -1,5 +1,5 @@
 # kk-erm-maven-plugin
-将erm关系描述文件生成JPA实体Entity的maven插件，模型中的说明会以注释的形式添加到Entity中
+将er关系描述文件生成JPA实体Entity的maven插件，模型中的说明会以注释的形式添加到Entity中
 
 # erm是什么？
 erm全称ermaster，是个基于eclipse插件建模的工具，支持从数据库导入关系生成ER图，导出设计图，导出DDL数据定义语句等功能。支持主流的数据库（mysql，Oracle，db2）建模。更多内容请参考官网介绍：[http://ermaster.sourceforge.net/](http://ermaster.sourceforge.net/)
