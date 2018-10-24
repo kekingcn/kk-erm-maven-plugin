@@ -40,6 +40,7 @@ public class ERMImporter {
     private FullyQualifiedJavaType fqjtBlob = new FullyQualifiedJavaType("java.sql.Blob");
     private static final Pattern hintPattern = Pattern.compile("\\[\\[.*\\]\\]");
     private static final Pattern javaTypePattern = Pattern.compile("!!!.*!!!");
+    private static final String enumPrefix = "///@";
 
     public Database doImport(File ermSource, String tablePattern) throws DocumentException, IOException {
         Database result = new Database();
@@ -119,8 +120,12 @@ public class ERMImporter {
                 String length = nodeWord.elementText("length");
                 String decimal = nodeWord.elementText("decimal");
                 String javaType = extractJavaType(column.getDescription());
+                Domain domain = extractEnumType(column.getDescription());
                 if (javaType != null) {
                     column.setJavaType(new FullyQualifiedJavaType(javaType));
+                    column.setLength(Integer.parseInt(length));
+                } else if (domain != null) {
+                    column.setDomain(domain);
                     column.setLength(Integer.parseInt(length));
                 } else if ("char".equals(type)) {
                     column.setJavaType(FullyQualifiedJavaType.getStringInstance());
@@ -183,6 +188,9 @@ public class ERMImporter {
                 }
                 if (type.startsWith("datetime")) {
                     this.logger.warn(MessageFormat.format("建议不要使用datetime，用timestamp代替[{0}], {1}, {2}", new Object[]{type, column.getDbName(), table.getDbName()}));
+                }
+                if (domain == null && column.getDescription() != null && column.getDescription().startsWith("///")) {
+                    this.logger.warn(MessageFormat.format("枚举类型格式不正确，使用其他类型代替[{0}] -> [{1}], {2}, {3}", new Object[]{type, column.getJavaType().getFullyQualifiedName(), column.getDbName(), table.getDbName()}));
                 }
                 column.setVersion(("JPA_VERSION".equalsIgnoreCase(column.getDbName())) || ("JPA_TIMESTAMP".equalsIgnoreCase(column.getDbName())));
                 if ("true".equals(nodeColumn.elementText("unique_key"))) {
@@ -293,4 +301,25 @@ public class ERMImporter {
         }
         return desc.substring(m.start() + 3, m.end() - 3);
     }
+
+    /**
+     * 判断是否为枚举类型
+     * @param description
+     * @return
+     */
+    private Domain extractEnumType(String description) {
+        if (description == null) {
+            return null;
+        }
+        description = StringUtils.remove(description, "\n");
+        description = StringUtils.remove(description, "\r");
+        if (description.startsWith(enumPrefix)) {
+            FullyQualifiedJavaType fqjtEnumType = new FullyQualifiedJavaType(description.substring(enumPrefix.length()));
+            Domain domain = new Domain();
+            domain.setType(fqjtEnumType);
+            return domain;
+        }
+        return null;
+    }
+
 }

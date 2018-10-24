@@ -81,6 +81,7 @@ public class EntityMojo extends AbstractMojo {
         this.generators.add(new PropertyNameField());
     }
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         String targetBasePackage = StringUtils.left(this.targetModule, StringUtils.lastIndexOf(this.targetModule, "."));
